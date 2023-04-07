@@ -1,0 +1,255 @@
+Sub 入出庫数反映()
+
+Dim suryou_nyuko As Integer '入庫の数量
+Dim suryou_syuko As Integer  '出庫の数量
+Dim nyu_syuko As String '入庫/出庫
+Dim i As Integer 'ループのカウンタ
+Dim j As Integer
+Dim end_row1 As Integer '在庫管理表の最終行
+Dim end_row2 As Integer '入出庫管理表の最終行
+
+
+Set ws1 = ThisWorkbook.Worksheets("在庫管理表")
+Set ws2 = ThisWorkbook.Worksheets("入出庫管理表")
+
+'シートの保護を解除
+'ws1.Unprotect
+'ws2.Unprotect
+
+end_row1 = ws1.Cells(Rows.Count, 4).End(xlUp).Row  '在庫管理表の品番(D列の最終行を取得)
+end_row2 = ws2.Cells(Rows.Count, 4).End(xlUp).Row  '入出庫管理表の品番(D列の最終行を取得)
+
+
+'入出庫数を一旦削除する(入出庫履歴を削除した場合を考慮して)
+For j = 6 To end_row1
+    ws1.Cells(j, 9) = ""
+    ws1.Cells(j, 10) = ""
+Next
+
+'在庫管理表から入出庫管理表を検索
+For j = 6 To end_row1
+    suryou_nyuko = 0
+    suryou_syuko = 0
+    For i = 10 To end_row2 '入出庫管理表の検索
+    '品番、エリア、棚、番地が一致する入出庫履歴を検索
+        If ws2.Cells(i, 4) = ws1.Cells(j, 4) And ws2.Cells(i, 12) = ws1.Cells(j, 1) And ws2.Cells(i, 13) = ws1.Cells(j, 2) And ws2.Cells(i, 14) = ws1.Cells(j, 3) Then
+            '入庫と出庫の数量を累計する
+            If ws2.Cells(i, 3) = "入庫" Then
+                suryou_nyuko = suryou_nyuko + ws2.Cells(i, 11)
+            End If
+        
+            If ws2.Cells(i, 3) = "出庫" Then
+                suryou_syuko = suryou_syuko + ws2.Cells(i, 11)
+            End If
+        End If
+    Next
+    '累計した数を在庫管理表に反映
+    ws1.Cells(j, 9) = suryou_nyuko
+    ws1.Cells(j, 10) = suryou_syuko
+Next
+    
+    
+MsgBox "完了しました"
+
+End Sub
+
+Sub 在庫数計算_発注点表示()
+
+Dim ws1 As Worksheet   '在庫管理表
+Dim i As Integer 'ループのカウンタ
+Dim end_row1 As Integer '在庫管理表の最終行
+Dim con '条件付き書式の条件の変数
+
+Set ws1 = ThisWorkbook.Worksheets("在庫管理表")
+'シートの保護を解除
+'ws1.Unprotect
+
+end_row1 = ws1.Cells(Rows.Count, 4).End(xlUp).Row
+    '在庫数を計算
+    For i = 6 To end_row1
+        ws1.Cells(i, 11) = ws1.Cells(i, 8) + ws1.Cells(i, 9) - ws1.Cells(i, 10)
+    Next
+     
+   '条件付き書式を削除
+    'ws1.Range("K6:K100001").FormatConditions.Delete
+    
+    '在庫数が空白ではなく、発注点以下の場合セルを黄色着色する
+    'Set con = Range("K6:K100001").FormatConditions.Add(Type:=xlExpression, Formula1:="=And(K6<>"""", K6<L6)")
+    'con.Interior.ColorIndex = 6
+    
+'シートの保護を設定
+'ws1.Cells(1, 5).Locked = True
+'ws1.Protect
+
+MsgBox "完了しました"
+
+End Sub
+Sub 入出庫登録()
+
+Dim ws2 As Worksheet   '在庫管理表
+Dim i As Integer 'ループのカウンタ
+Dim end_row1 As Integer '日付が入力されている列の最終行
+Dim end_row2 As Integer '入出庫情報が出力されている最終行
+
+
+Set ws2 = ThisWorkbook.Worksheets("入出庫管理表")
+'シートの保護を解除
+'ws2.Unprotect
+
+'入出庫管理表の品番(D列の最終行を取得)
+end_row2 = ws2.Cells(Rows.Count, 4).End(xlUp).Row
+
+If ws2.Cells(5, 4) = "" Then
+    MsgBox "品番を入力してください"
+    Exit Sub
+ElseIf ws2.Cells(5, 3) = "" Then
+    MsgBox "入庫/出庫を入力してください"
+    Exit Sub
+ElseIf ws2.Cells(5, 11) = "" Then
+    MsgBox "数量を入力してください"
+    Exit Sub
+End If
+
+'入出庫管理表の一番下の行+1行目に入力フィールドの情報を転記する
+ws2.Cells(end_row2 + 1, 1) = ws2.Cells(5, 1) '年月を反映
+ws2.Cells(end_row2 + 1, 2) = ws2.Cells(5, 2) '入出庫日を反映
+ws2.Cells(end_row2 + 1, 3) = ws2.Cells(5, 3) '入庫/出庫を反映
+ws2.Cells(end_row2 + 1, 4) = ws2.Cells(5, 4) '品番を反映
+ws2.Cells(end_row2 + 1, 5) = ws2.Cells(5, 5) '品名を反映
+ws2.Cells(end_row2 + 1, 6) = ws2.Cells(5, 6) '型式を反映
+ws2.Cells(end_row2 + 1, 7) = ws2.Cells(5, 7) 'メーカを反映
+ws2.Cells(end_row2 + 1, 8) = ws2.Cells(5, 8) '持出課を反映
+ws2.Cells(end_row2 + 1, 9) = ws2.Cells(5, 9) '持出者を反映
+ws2.Cells(end_row2 + 1, 10) = ws2.Cells(5, 10) '払出先ラインを反映
+ws2.Cells(end_row2 + 1, 11) = ws2.Cells(5, 11) '数量を反映
+ws2.Cells(end_row2 + 1, 12) = ws2.Cells(5, 12) '在庫エリアを反映
+ws2.Cells(end_row2 + 1, 13) = ws2.Cells(5, 13) '棚を反映
+ws2.Cells(end_row2 + 1, 14) = ws2.Cells(5, 14) '番地を反映
+    
+'シートの保護を設定
+'ws2.Cells(1, 5).Locked = True
+'ws2.Protect
+
+MsgBox "完了しました"
+
+    
+End Sub
+Sub 在庫管理表_情報反映()
+'
+' 在庫管理表_情報反映 Macro
+'
+Dim hinban As String
+Dim SerchRange As Range
+Dim i As Integer 'ループのカウンタ
+
+
+ Application.ScreenUpdating = False
+'エラー処理
+On Error GoTo Catch
+
+    Set ws1 = ThisWorkbook.Worksheets("在庫管理表")
+    Set ws2 = ThisWorkbook.Worksheets("入出庫管理表")
+
+    'シートの保護を解除
+    'ws1.Unprotect
+    'ws2.Unprotect
+
+    Set SerchRange = ws1.Range("$D$6:$G$100001") 'vlookupの検索範囲の指定
+    Set SerchRange2 = ws1.Range("$A$6:$D$100001") 'Indexの検索範囲の指定
+    Set SerchRange3 = ws1.Range("$D$6:$D$100001") 'Macthの検索範囲の指定
+    end_row = ws2.Cells(Rows.Count, 4).End(xlUp).Row '入出庫管理表の品番(D列)の最終行を取得)
+    
+    ws2.Cells(5, 1) = Format(Date, "yyyymm")
+    ws2.Cells(5, 2) = Format(Date, "mm/dd")
+    hinban = ws2.Cells(5, 4)
+    
+    With WorksheetFunction
+
+    ws2.Cells(5, 5) = .VLookup(hinban, SerchRange, 2, False) '品名取得
+    ws2.Cells(5, 6) = .VLookup(hinban, SerchRange, 3, False) '型式取得
+    ws2.Cells(5, 7) = .VLookup(hinban, SerchRange, 4, False) 'メーカ取得
+    ws2.Cells(5, 12) = .Index(SerchRange2, .Match(hinban, SerchRange3, 0), 1) '在庫エリア
+    ws2.Cells(5, 13) = .Index(SerchRange2, .Match(hinban, SerchRange3, 0), 2) '棚
+    ws2.Cells(5, 14) = .Index(SerchRange2, .Match(hinban, SerchRange3, 0), 3) '番地
+    
+    End With
+    
+    'シートの保護を設定
+    ws1.Cells(1, 5).Locked = True
+    ws2.Cells(1, 5).Locked = True
+
+    'ws1.Protect
+    'ws2.Protect
+        
+    Application.ScreenUpdating = True
+        
+    ws2.Activate
+    MsgBox "完了しました"
+    Exit Sub
+'何かしらエラーが発生した場合以下の処理
+Catch:
+    MsgBox "エラーが発生しました" & Chr(13) & "品番入力が漏れていないか確認願います"
+
+   
+End Sub
+Sub 品番修正()
+'
+' 生産技術課で利用している在庫かんばんを読み取った値から品番を抽出するマクロ
+'
+
+
+ Application.ScreenUpdating = False
+'エラー処理
+On Error GoTo Catch
+
+    Set ws2 = ThisWorkbook.Worksheets("入出庫管理表")
+
+    'シートの保護を解除
+    'ws2.Unprotect
+
+    '生産技術課のQRコードを読み取った文字列から品番を取得
+    ws2.Cells(5, 4) = Mid(ws2.Cells(5, 4).Value, 24, 10)
+       
+   
+    'シートの保護を設定
+    'ws2.Cells(1, 5).Locked = True
+    'ws2.Protect
+        
+    Application.ScreenUpdating = True
+        
+    ws2.Activate
+    MsgBox "完了しました"
+    Exit Sub
+'何かしらエラーが発生した場合以下の処理
+Catch:
+    MsgBox "エラーが発生しました"
+
+   
+End Sub
+Sub 在庫管理表_シート保護解除()
+
+Set ws1 = ThisWorkbook.Worksheets("在庫管理表")
+ws1.Unprotect
+
+End Sub
+Sub 在庫管理表_シート保護()
+
+Set ws1 = ThisWorkbook.Worksheets("在庫管理表")
+ws1.Protect
+
+End Sub
+Sub 入出庫管理表_シート保護解除()
+
+Set ws2 = ThisWorkbook.Worksheets("入出庫管理表")
+ws2.Unprotect
+
+End Sub
+Sub 入出庫管理表_シート保護()
+
+Set ws2 = ThisWorkbook.Worksheets("入出庫管理表")
+ws2.Protect
+
+End Sub
+
+
+
